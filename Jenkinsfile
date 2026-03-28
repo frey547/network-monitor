@@ -42,7 +42,7 @@ pipeline {
                 script {
                     sh "docker rm -f temp-${IMAGE_NAME} || true"
                     sh "docker run -d --name temp-${IMAGE_NAME} -p 8081:8000 ${IMAGE_NAME}:latest"
-                    sleep 15
+                    sleep 25
                     def result = sh(script: "curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/health", returnStdout: true).trim()
                     if (result != '200') {
                         error "Health check failed: HTTP ${result}"
