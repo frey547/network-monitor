@@ -7,7 +7,7 @@ pipeline {
 
     options {
         buildDiscarder(logRotator(numToKeepStr: '10')) // 保留最近10个构建
-        timestamps()                                  // 日志带时间戳                            
+        timestamps()                                  // 日志带时间戳
     }
 
     stages {
@@ -40,13 +40,28 @@ pipeline {
         stage('Health Check') {
             steps {
                 script {
+                    // 删除旧容器（如果存在）
                     sh "docker rm -f temp-${IMAGE_NAME} || true"
+
+                    // 启动新容器
                     sh "docker run -d --name temp-${IMAGE_NAME} -p 8081:8000 ${IMAGE_NAME}:latest"
-                    sleep 25
-                    def result = sh(script: "curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/health", returnStdout: true).trim()
+
+                    // 等待容器内部 FastAPI 启动
+                    sleep 10  // 延长等待时间，确保服务启动完成
+
+                    // 健康检查：在容器内部访问 127.0.0.1:8000/health
+                    def result = sh(
+                        script: "docker exec temp-${IMAGE_NAME} curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/health",
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Health check returned HTTP ${result}"
+
                     if (result != '200') {
                         error "Health check failed: HTTP ${result}"
                     }
+
+                    // 健康检查完毕，停止并删除临时容器
                     sh "docker stop temp-${IMAGE_NAME} && docker rm temp-${IMAGE_NAME}"
                 }
             }
