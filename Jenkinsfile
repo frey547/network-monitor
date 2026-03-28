@@ -7,8 +7,7 @@ pipeline {
 
     options {
         buildDiscarder(logRotator(numToKeepStr: '10')) // 保留最近10个构建
-        timestamps()                                  // 日志带时间戳
-        ansiColor('xterm')                            
+        timestamps()                                  // 日志带时间戳                            
     }
 
     stages {
