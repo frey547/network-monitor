@@ -40,7 +40,7 @@ pipeline {
         stage('Health Check') {
             steps {
                 script {
-                    sh "docker run -d --name temp-${IMAGE_NAME} -p 8080:8000 ${IMAGE_NAME}:latest"
+                    sh "docker run -d --name temp-${IMAGE_NAME} -p 8081:8000 ${IMAGE_NAME}:latest"
                     sleep 5
                     def result = sh(script: "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/health", returnStdout: true).trim()
                     if (result != '200') {
