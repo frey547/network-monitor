@@ -42,29 +42,16 @@ pipeline {
                 script {
                     // 删除旧容器（如果存在）
                     sh "docker rm -f temp-${IMAGE_NAME} || true"
+                    // 启动临时容器，随机分配宿主端口
+                    sh "docker run -d --name temp-${IMAGE_NAME} -P ${IMAGE_NAME}:latest"
 
                     // 自动选择可用端口
                     def port = sh(
-                        script: """
-                            for p in \$(seq 8081 8090); do
-                                if ! lsof -i:\$p >/dev/null 2>&1; then
-                                    echo \$p
-                                    exit 0
-                                fi
-                            done
-                            echo 0
-                        """,
+                        script: "docker port temp-${IMAGE_NAME} 8000/tcp | cut -d':' -f2",
                         returnStdout: true
                     ).trim()
+                    echo "Selected random host port: ${port}"
 
-                    if (port == "0") {
-                        error "No available port found in range 8081-8090"
-                    }
-
-                    echo "Selected available port: ${port}"
-
-                    // 启动临时容器
-                    sh "docker run -d --name temp-${IMAGE_NAME} -p ${port}:8000 ${IMAGE_NAME}:latest"
 
                     // 等待容器内 FastAPI 启动完成
                     sleep 15  // 可根据服务启动时间调整
