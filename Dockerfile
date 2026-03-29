@@ -5,8 +5,10 @@ WORKDIR /app
 # 先复制依赖文件
 COPY requirements.txt .
 
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # 安装依赖
 RUN pip install --no-cache-dir -r requirements.txt
+
 
 # 复制整个 app 文件夹
 COPY app/ ./app/       
