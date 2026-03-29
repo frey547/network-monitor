@@ -66,7 +66,7 @@ pipeline {
 
                     // 健康检查：在容器内部访问 127.0.0.1:8000/health
                     def result = sh(
-                        script: "docker exec temp-${IMAGE_NAME} curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/health",
+                        script: "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${port}/health",
                         returnStdout: true
                     ).trim()
 
