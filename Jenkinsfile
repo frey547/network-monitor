@@ -43,28 +43,33 @@ pipeline {
                     // 删除旧容器（如果存在）
                     sh "docker rm -f temp-${IMAGE_NAME} || true"
 
-                    // 自动选择一个可用端口
+                    // 自动选择可用端口
                     def port = sh(
-                	script: """
-                  	    for p in {8081..8090}; do
-                        	if ! lsof -i:\$p >/dev/null 2>&1; then
-                            	    echo \$p
-                            	    break
-                       	        fi
-                   	    done
-               	        """,
-               	        returnStdout: true
-           	    ).trim()
+                        script: """
+                            for p in \$(seq 8081 8090); do
+                                if ! lsof -i:\$p >/dev/null 2>&1; then
+                                    echo \$p
+                                    exit 0
+                                fi
+                            done
+                            echo 0
+                        """,
+                        returnStdout: true
+                    ).trim()
 
-           	    echo "Selected available port: ${port}"
+                    if (port == "0") {
+                        error "No available port found in range 8081-8090"
+                    }
 
-                    // 启动新容器
+                    echo "Selected available port: ${port}"
+
+                    // 启动临时容器
                     sh "docker run -d --name temp-${IMAGE_NAME} -p ${port}:8000 ${IMAGE_NAME}:latest"
 
-                    // 等待容器内部 FastAPI 启动
-                    sleep 15  // 延长等待时间，确保服务启动完成
+                    // 等待容器内 FastAPI 启动完成
+                    sleep 15  // 可根据服务启动时间调整
 
-                    // 健康检查：在容器内部访问 127.0.0.1:8000/health
+                    // 健康检查：访问容器映射端口
                     def result = sh(
                         script: "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${port}/health",
                         returnStdout: true
@@ -73,10 +78,13 @@ pipeline {
                     echo "Health check returned HTTP ${result}"
 
                     if (result != '200') {
+                        // 停掉并删除临时容器
+                        sh "docker stop temp-${IMAGE_NAME} || true"
+                        sh "docker rm temp-${IMAGE_NAME} || true"
                         error "Health check failed: HTTP ${result}"
                     }
 
-                    // 健康检查完毕，停止并删除临时容器
+                    // 健康检查成功，停止并删除临时容器
                     sh "docker stop temp-${IMAGE_NAME} || true"
                     sh "docker rm temp-${IMAGE_NAME} || true"
                 }
