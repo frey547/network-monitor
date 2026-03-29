@@ -42,15 +42,8 @@ pipeline {
                 script {
                     // 删除旧容器（如果存在）
                     sh "docker rm -f temp-${IMAGE_NAME} || true"
-                    // 启动临时容器，随机分配宿主端口
-                    sh "docker run -d --name temp-${IMAGE_NAME} -P ${IMAGE_NAME}:latest"
-
-                    // 自动选择可用端口
-                    def port = sh(
-                        script: "docker port temp-${IMAGE_NAME} 8000/tcp | cut -d':' -f2",
-                        returnStdout: true
-                    ).trim()
-                    echo "Selected random host port: ${port}"
+                    // 启动临时容器，使用 host 网络模式
+                    sh "docker run -d --name temp-${IMAGE_NAME} --network host ${IMAGE_NAME}:latest"
 
 
                     // 等待容器内 FastAPI 启动完成
@@ -58,7 +51,7 @@ pipeline {
 
                     // 健康检查：访问容器映射端口
                     def result = sh(
-                        script: "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${port}/health",
+                        script: "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/health",
                         returnStdout: true
                     ).trim()
 
