@@ -85,6 +85,7 @@ pipeline {
                 docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
                 docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest
                 """
+            }
         }
 
         stage('Deploy') {
