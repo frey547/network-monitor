@@ -4,8 +4,8 @@ import numpy as np
 from fastapi import FastAPI
 import uvicorn
 
-from detector import AnomalyDetector, AnomalyResult
-from alert_manager import AlertManager
+from app.detector import AnomalyDetector, AnomalyResult
+from app.alert_manager import AlertManager
 
 from prometheus_client import Counter, generate_latest
 from fastapi.responses import Response
