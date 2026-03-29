@@ -43,11 +43,26 @@ pipeline {
                     // 删除旧容器（如果存在）
                     sh "docker rm -f temp-${IMAGE_NAME} || true"
 
+                    // 自动选择一个可用端口
+                    def port = sh(
+                	script: """
+                  	    for p in {8081..8090}; do
+                        	if ! lsof -i:\$p >/dev/null 2>&1; then
+                            	    echo \$p
+                            	    break
+                       	        fi
+                   	    done
+               	        """,
+               	        returnStdout: true
+           	    ).trim()
+
+           	    echo "Selected available port: ${port}"
+
                     // 启动新容器
                     sh "docker run -d --name temp-${IMAGE_NAME} -p 8081:8000 ${IMAGE_NAME}:latest"
 
                     // 等待容器内部 FastAPI 启动
-                    sleep 10  // 延长等待时间，确保服务启动完成
+                    sleep 15  // 延长等待时间，确保服务启动完成
 
                     // 健康检查：在容器内部访问 127.0.0.1:8000/health
                     def result = sh(
@@ -62,7 +77,8 @@ pipeline {
                     }
 
                     // 健康检查完毕，停止并删除临时容器
-                    sh "docker stop temp-${IMAGE_NAME} && docker rm temp-${IMAGE_NAME}"
+                    sh "docker stop temp-${IMAGE_NAME} || true"
+                    sh "docker rm temp-${IMAGE_NAME} || true"
                 }
             }
         }
