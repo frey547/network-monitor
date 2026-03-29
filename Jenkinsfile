@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         IMAGE_NAME = "network-monitor"
+        IMAGE_TAG  = "${BUILD_NUMBER}"
+        DOCKER_REGISTRY = "Fre547"
     }
 
     options {
@@ -33,7 +35,10 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:latest ."
+                sh """
+                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                """
             }
         }
 
@@ -67,6 +72,32 @@ pipeline {
                     // 健康检查成功，停止并删除临时容器
                     //sh "docker stop temp-${IMAGE_NAME} || true"
                     sh "docker rm -f temp-${IMAGE_NAME} || true"
+                }
+            }
+        }
+
+
+        stage('Push Image') {
+            steps {
+                sh """
+                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                docker tag ${IMAGE_NAME}:latest ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest
+                docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest
+                """
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    sh "docker rm -f ${IMAGE_NAME} || true"
+                    sh "docker pull ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest"
+                    sh """
+                    docker run -d \
+                      -p 8082:8000 \
+                      --name ${IMAGE_NAME} \
+                      ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest
+                    """
                 }
             }
         }
