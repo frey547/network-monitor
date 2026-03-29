@@ -59,7 +59,7 @@ pipeline {
            	    echo "Selected available port: ${port}"
 
                     // 启动新容器
-                    sh "docker run -d --name temp-${IMAGE_NAME} -p 8081:8000 ${IMAGE_NAME}:latest"
+                    sh "docker run -d --name temp-${IMAGE_NAME} -p ${port}:8000 ${IMAGE_NAME}:latest"
 
                     // 等待容器内部 FastAPI 启动
                     sleep 15  // 延长等待时间，确保服务启动完成
