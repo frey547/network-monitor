@@ -1,6 +1,6 @@
 import time
 from typing import Dict, List, Tuple
-from detector import AnomalyResult
+from app.detector import AnomalyResult
 
 class AlertManager:
     def __init__(self, limit_per_minute: int = 5, window_seconds: int = 300):
