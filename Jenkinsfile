@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "network-monitor"
         IMAGE_TAG  = "${BUILD_NUMBER}"
-        DOCKER_REGISTRY = "Fre547"
+        DOCKER_REGISTRY = "fre-docker-hub"
     }
 
     options {
@@ -76,7 +76,15 @@ pipeline {
             }
         }
 
-
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', 
+                                                  usernameVariable: 'DOCKER_USER', 
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                }
+            }
+        }
         stage('Push Image') {
             steps {
                 sh """
