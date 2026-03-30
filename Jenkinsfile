@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "network-monitor"
         IMAGE_TAG  = "${BUILD_NUMBER}"
-        DOCKER_REGISTRY = "fre-docker-hub"
+        DOCKER_REGISTRY = "docker.io/Fre547"
     }
 
     options {
@@ -78,10 +78,10 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', 
+                withCredentials([usernamePassword(credentialsId: 'fre-docker-hub', 
                                                   usernameVariable: 'DOCKER_USER', 
                                                   passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS docker.io'
                 }
             }
         }
