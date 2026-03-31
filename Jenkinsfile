@@ -35,10 +35,11 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh """
-                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
-                """
+                sh '''
+                export HTTP_PROXY=http://192.168.207.1:10808
+                export HTTPS_PROXY=http://192.168.207.1:10808
+                docker build -t network-monitor:${BUILD_NUMBER} .
+                '''
             }
         }
 
