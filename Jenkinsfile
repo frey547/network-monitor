@@ -38,7 +38,7 @@ pipeline {
                 sh '''
                 export HTTP_PROXY=http://192.168.207.1:10808
                 export HTTPS_PROXY=http://192.168.207.1:10808
-                docker build -t network-monitor:${BUILD_NUMBER} .
+                docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} -t ${IMAGE_NAME}:latest .
                 '''
             }
         }
@@ -82,7 +82,12 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'fre-docker-hub', 
                                                   usernameVariable: 'DOCKER_USER', 
                                                   passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS docker.io'
+                    sh '''
+                    export HTTP_PROXY=http://192.168.207.1:10808
+                    export HTTPS_PROXY=http://192.168.207.1:10808
+
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    '''
                 }
             }
         }
