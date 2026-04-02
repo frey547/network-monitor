@@ -1,20 +1,18 @@
-FROM python:3.12-slim
+FROM docker.1ms.run/python:3.12-slim
 
 WORKDIR /app
 
-# 先复制依赖文件
 COPY requirements.txt .
 
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && \
+    pip config set install.trusted-host mirrors.aliyun.com
+
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-# 安装依赖
+
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY app/ ./app/
 
-# 复制整个 app 文件夹
-COPY app/ ./app/       
-
-# 暴露端口
 EXPOSE 8000
 
-# 启动命令，注意模块路径
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
