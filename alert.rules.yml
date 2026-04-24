@@ -1,0 +1,10 @@
+groups:
+- name: fastapi-alerts
+  rules:
+  - alert: HighRequestCount
+    expr: rate(request_count_total[1m]) > 0
+    for: 5s
+    labels:
+      severity: warning
+    annotations:
+      description: "请求量过高"

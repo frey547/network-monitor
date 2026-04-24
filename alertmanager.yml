@@ -1,0 +1,11 @@
+route:
+  receiver: feishu-webhook
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1m
+
+receivers:
+  - name: feishu-webhook
+    webhook_configs:
+      - url: 'http://network-monitor:8000/webhook/alert'
+        send_resolved: false
