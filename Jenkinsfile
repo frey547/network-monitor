@@ -63,14 +63,20 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh "docker rm -f network-monitor || true"
-                sh """
-                docker run -d \
-                  -p 8001:8000 \
-                  --name network-monitor \
-                  --restart unless-stopped \
-                  ${IMAGE_NAME}:latest
-                """
+                sh "docker compose down || true"
+                sh "docker compose up -d --build"
+                sleep 15
+                script {
+                    def result = sh(
+                        script: "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8001/health",
+                        returnStdout: true
+                    ).trim()
+                    echo "Deploy health check returned HTTP ${result}"
+                    if (result != '200') {
+                        sh "docker compose logs network-monitor || true"
+                        error "Deploy health check failed"
+                    }
+                }
             }
         }
     }
