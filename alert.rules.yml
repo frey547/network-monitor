@@ -2,8 +2,8 @@ groups:
 - name: fastapi-alerts
   rules:
   - alert: HighRequestCount
-    expr: rate(request_count_total[1m]) > 0
-    for: 5s
+    expr: rate(request_count_total[1m]) > 80
+    for: 5m
     labels:
       severity: warning
     annotations:
