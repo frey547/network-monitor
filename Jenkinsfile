@@ -15,7 +15,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                deleteDir()
+		sh "cp -r /home/s/network-monitor/* ."
             }
         }
 
