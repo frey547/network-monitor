@@ -9,12 +9,12 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timestamps()
+	skipDefaultCheckout(true)  //关闭默认 checkout
     }
 
     stages {
         stage('Checkout') {
             steps {
-		deleteDir()
                 checkout scm
             }
         }
@@ -64,8 +64,10 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh "docker compose down || true"
-                sh "docker compose up -d --build"
+		dir('/home/s/network-monitor') {
+            	    sh "docker compose down || true"
+              	    sh "docker compose up -d --build"
+		}
                 sleep 15
                 script {
                     def result = sh(
