@@ -20,9 +20,10 @@ pipeline {
         stage('Checkout') {
             steps {
                 cleanWs()
-                git url: 'https://github.com/frey547/network-monitor.git',
-                    branch: 'main',
-                    credentialsId: 'github-https'
+                checkout scmGit(
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'git@github.com:frey547/network-monitor.git']]
+                )
             }
         }
 
