@@ -4,9 +4,8 @@ pipeline {
     environment {
         HARBOR_URL    = '192.168.207.129:8088'
         IMAGE_NAME    = '192.168.207.129:8088/network-monitor/app'
-        DEPLOY_DIR    = '/home/s/network-monitor'
+        DEPLOY_DIR    = '/workspace/network-monitor'
         COMPOSE_FILE  = 'docker-compose.deploy.yml'
-        HEALTH_URL    = 'http://127.0.0.1:8001/health'
     }
 
     options {
@@ -80,14 +79,15 @@ pipeline {
                         docker compose -f ${COMPOSE_FILE} up -d network-monitor
                     """
 
-                    sleep 15
+                    sleep 20
 
-                    def code = sh(
-                        script: "curl -sf -o /dev/null -w '%{http_code}' ${HEALTH_URL}",
-                        returnStatus: true
-                    )
+                    def health = sh(
+                        script: "docker inspect --format='{{.State.Health.Status}}' network-monitor",
+                        returnStdout: true
+                    ).trim()
+                    echo "Deploy health: ${health}"
 
-                    if (code != 0) {
+                    if (health != 'healthy') {
                         echo "=== DEPLOY FAILED - collecting logs ==="
                         sh "cd ${DEPLOY_DIR} && docker compose -f ${COMPOSE_FILE} logs --tail=50 network-monitor || true"
 
@@ -97,13 +97,13 @@ pipeline {
                             cd ${DEPLOY_DIR}
                             docker compose -f ${COMPOSE_FILE} up -d network-monitor || true
                         """
-                        sleep 10
+                        sleep 15
 
-                        def rollbackCode = sh(
-                            script: "curl -sf -o /dev/null -w '%{http_code}' ${HEALTH_URL}",
-                            returnStatus: true
-                        )
-                        if (rollbackCode != 0) {
+                        def rollbackHealth = sh(
+                            script: "docker inspect --format='{{.State.Health.Status}}' network-monitor",
+                            returnStdout: true
+                        ).trim()
+                        if (rollbackHealth != 'healthy') {
                             error "Rollback also failed. Manual intervention required."
                         }
                         error "Deploy failed. Rolled back to build #${prevBuild}."
