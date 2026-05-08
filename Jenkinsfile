@@ -14,16 +14,14 @@ pipeline {
         timestamps()
         timeout(time: 15, unit: 'MINUTES')
         disableConcurrentBuilds()
+        skipDefaultCheckout()
     }
 
     stages {
         stage('Checkout') {
             steps {
                 cleanWs()
-                checkout scmGit(
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[url: 'git@github.com:frey547/network-monitor.git']]
-                )
+                sh 'git clone --depth 1 --branch main git@github.com:frey547/network-monitor.git .'
             }
         }
 
