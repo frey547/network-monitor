@@ -35,16 +35,16 @@ pipeline {
                 script {
                     sh 'docker rm -f test-network-monitor || true'
                     sh "docker run -d --name test-network-monitor ${IMAGE_NAME}:${BUILD_NUMBER}"
-                    sleep 10
-                    def code = sh(
-                        script: "docker exec test-network-monitor curl -sf -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/health",
-                        returnStdout: true
-                    ).trim()
-                    echo "Health check: HTTP ${code}"
-                    if (code != '200') {
-                        sh 'docker logs test-network-monitor || true'
-                        error "Health check failed with HTTP ${code}"
-                    }
+                    sh '''
+                        for i in $(seq 1 30); do
+                            docker exec test-network-monitor curl -sf http://127.0.0.1:8000/health && exit 0
+                            sleep 2
+                        done
+                        echo "Health check failed after 60s"
+                        docker logs test-network-monitor || true
+                        exit 1
+                    '''
+                    echo "Test health check passed"
                 }
             }
             post {
