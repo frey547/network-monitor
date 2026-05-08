@@ -20,9 +20,9 @@ pipeline {
         stage('Checkout') {
             steps {
                 cleanWs()
-                git url: 'git@github.com:frey547/network-monitor.git',
+                git url: 'https://github.com/frey547/network-monitor.git',
                     branch: 'main',
-                    credentialsId: 'github-ssh'
+                    credentialsId: 'github-https'
             }
         }
 
