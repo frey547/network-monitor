@@ -1,7 +1,6 @@
 from time import time
 import uuid
 
-import httpx
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 from prometheus_client import generate_latest
@@ -105,44 +104,3 @@ def metrics():
     return Response(generate_latest(), media_type="text/plain")
 
 
-@router.post("/webhook/alert")
-async def webhook_alert(request: Request):
-    data = await request.json()
-    alerts = data.get("alerts", [])
-
-    messages = []
-    for alert in alerts:
-        labels = alert.get("labels", {})
-        annotations = alert.get("annotations", {})
-
-        alert_name = labels.get("alertname", "")
-        status = alert.get("status", "")
-        instance = labels.get("instance", "")
-        description = annotations.get("description", "")
-
-        messages.append(
-            f"告警名称: {alert_name}\n"
-            f"状态: {status}\n"
-            f"实例: {instance}\n"
-            f"描述: {description}"
-        )
-
-    content = "\n\n".join(messages) or "收到告警但内容为空"
-
-    feishu_payload = {
-        "msg_type": "text",
-        "content": {
-            "text": content
-        }
-    }
-
-    FEISHU_WEBHOOK = "https://open.feishu.cn/open-apis/bot/v2/hook/8fc6d01e-3a8f-4d68-8f3c-08aee77f9e88"
-
-    try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(FEISHU_WEBHOOK, json=feishu_payload, timeout=10)
-            resp.raise_for_status()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Feishu webhook failed: {str(e)}")
-
-    return {"status": "ok"}
